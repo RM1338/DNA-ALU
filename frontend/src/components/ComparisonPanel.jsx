@@ -1,0 +1,1 @@
+export default function ComparisonPanel({title,metrics,rows}){return <div><h3>{title}</h3><div>{metrics?.join(' | ')}</div><table>{rows?.map((r,i)=><tr key={i}><td>{r.gateType}</td><td>{r.bioMechanism}</td><td>{r.strandCost}</td><td>{r.reactionTimeMin}</td></tr>)}</table></div>}
