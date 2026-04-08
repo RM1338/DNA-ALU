@@ -26,6 +26,7 @@ import SimulationOverlay from "../components/SimulationOverlay";
 
 const INPUT_LABELS = ["A", "B", "Cin", "D", "E"];
 const OUTPUT_LABELS = ["Sum", "Cout", "Out3", "Out4"];
+const MIN_SIMULATION_POPUP_MS = 5000;
 
 function mapCircuit(nodes, edges) {
   const nodeById = Object.fromEntries(nodes.map((n) => [n.id, n]));
@@ -118,14 +119,20 @@ export default function CanvasPage() {
       outputs: transformed.outputLabels,
     };
 
+    const startedAt = Date.now();
     store.setSimulating(true);
     try {
       const result = await simulateCircuit(payload);
+      const elapsed = Date.now() - startedAt;
+      const remaining = Math.max(0, MIN_SIMULATION_POPUP_MS - elapsed);
+      if (remaining > 0) {
+        await new Promise((resolve) => setTimeout(resolve, remaining));
+      }
       store.setSimulationResult(result);
+      store.setSimulating(false);
       navigate("/results");
     } catch (e) {
       pushToast(e.message || "Simulation failed");
-    } finally {
       store.setSimulating(false);
     }
   }

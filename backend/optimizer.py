@@ -2,6 +2,8 @@ from simulator import simulate
 from copy import deepcopy
 from gate_library import GATE_LIBRARY
 
+VALID_OBJECTIVES = {"minStrand", "minTime"}
+
 def _replacement(gt):
     if gt == "NAND":
         return "AND"
@@ -12,6 +14,9 @@ def _replacement(gt):
     return None
 
 def optimize(payload, objective):
+    if objective not in VALID_OBJECTIVES:
+        allowed = ", ".join(sorted(VALID_OBJECTIVES))
+        raise ValueError(f"Unsupported optimization objective '{objective}'. Allowed values: {allowed}")
     c=deepcopy(payload)
     if objective=="minStrand":
         for g in c.gates:

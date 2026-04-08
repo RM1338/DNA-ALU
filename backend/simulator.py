@@ -20,7 +20,13 @@ def _eval(gt, vals):
 
 def simulate(payload):
     G=build_graph(payload)
-    generations=list(nx.topological_generations(G)) if len(G) else []
+    if len(G):
+        try:
+            generations=list(nx.topological_generations(G))
+        except nx.NetworkXUnfeasible as exc:
+            raise ValueError("Circuit contains a cycle. Remove feedback loops and try again.") from exc
+    else:
+        generations=[]
     stages=[]; cost=[]; t=0.0
     for i,gen in enumerate(generations,1):
         d=max(G.nodes[g]['reactionTime'] for g in gen)
@@ -33,7 +39,7 @@ def simulate(payload):
     incoming={}
     for w in payload.wires: incoming.setdefault(w.target,[]).append(w.source)
     truth=[]
-    topo=list(nx.topological_sort(G)) if len(G) else []
+    topo=[gid for gen in generations for gid in gen]
     for combo in product([0,1], repeat=len(payload.inputs)):
         input_assignment={k:v for k,v in zip(payload.inputs,combo)}
         vals={f'in_{k}':v for k,v in input_assignment.items()}

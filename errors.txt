@@ -1,0 +1,51 @@
+DNA-ALU Project Error Audit Report (Resolved)
+============================================
+
+Status
+------
+- All previously listed errors and hardening gaps have been fixed.
+- No open issues remain in this report.
+
+Previously Reported Issues - Current State
+------------------------------------------
+1. React hook rule violation in Results page
+   - Previous claim: hooks were called conditionally.
+   - Current state: Fixed. Hooks are called at top-level before the early return.
+   - File: frontend/src/pages/ResultsPage.jsx
+
+2. Input/output ID mapping failure
+   - Previous claim: manual input node IDs caused all-zero input evaluation.
+   - Current state: Fixed. Frontend rewrites wire endpoints to in_<label>/out_<label>, and backend value mapping aligns with this format.
+   - Files: frontend/src/pages/ResultsPage.jsx, frontend/src/store/circuitStore.js, backend/simulator.py
+
+3. Broken minTime optimization logic
+   - Previous claim: optimizer added a disconnected BUFFER gate.
+   - Current state: Fixed. Optimizer now performs gate-type replacement based on cost/time comparisons.
+   - File: backend/optimizer.py
+
+4. Missing dependency warning in Compare page
+   - Previous claim: useEffect missing pushToast dependency.
+   - Current state: Fixed. pushToast is included in dependencies.
+   - File: frontend/src/pages/ComparePage.jsx
+
+5. Missing backend gate-type error handling
+   - Previous claim: unsupported gate type caused unhandled KeyError.
+   - Current state: Fixed. Unsupported gate types raise ValueError in simulator and return HTTP 400 via API layer.
+   - Files: backend/simulator.py, backend/main.py
+
+Hardening Fixes Applied
+-----------------------
+1. CORS policy tightened
+   - Fixed: wildcard CORS removed.
+   - Current behavior: backend now uses explicit local defaults and supports environment override via CORS_ALLOW_ORIGINS.
+   - File: backend/main.py
+
+2. Optimization objective validation enforced
+   - Fixed: unsupported objective values now raise ValueError and are returned as HTTP 400 by the API layer.
+   - Current allowed values: minStrand, minTime.
+   - Files: backend/optimizer.py, backend/main.py
+
+Conclusion
+----------
+- Reported issues are now resolved.
+- This file currently tracks no outstanding errors.

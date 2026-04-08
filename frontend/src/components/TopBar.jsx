@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { exportPDF, exportSBOL } from "../api/bioApi";
 import { useCircuitStore } from "../store/circuitStore";
@@ -7,11 +8,20 @@ export default function TopBar() {
   const nav = useNavigate();
   const pushToast = useUiStore((s) => s.pushToast);
   const { projectName, setProjectName, gates, wires, simulationResult } = useCircuitStore();
+  const nodeById = useMemo(() => Object.fromEntries(gates.map((g) => [g.id, g])), [gates]);
 
   const circuit = {
     projectName,
     gates: gates.filter((g) => g.type === "bioGate").map((g) => ({ id: g.id, gateType: g.data?.gateType, position: g.position, params: g.data?.params || {} })),
-    wires,
+    wires: wires.map((w) => {
+      const sourceNode = nodeById[w.source];
+      const targetNode = nodeById[w.target];
+      return {
+        ...w,
+        source: sourceNode?.type === "inputNode" ? `in_${sourceNode.data?.label}` : w.source,
+        target: targetNode?.type === "outputNode" ? `out_${targetNode.data?.label}` : w.target,
+      };
+    }),
     inputs: gates.filter((g) => g.type === "inputNode").map((g) => g.data?.label),
     outputs: gates.filter((g) => g.type === "outputNode").map((g) => g.data?.label),
   };

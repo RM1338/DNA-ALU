@@ -1,4 +1,5 @@
 import logging
+import os
 from io import BytesIO
 from typing import List
 
@@ -18,8 +19,19 @@ from simulator import simulate
 logger = logging.getLogger("bioalu.api")
 logging.basicConfig(level=logging.INFO)
 
+DEFAULT_CORS_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]
+
+
+def _cors_origins():
+    raw = os.getenv("CORS_ALLOW_ORIGINS", "")
+    if not raw.strip():
+        return DEFAULT_CORS_ORIGINS
+    parsed = [origin.strip() for origin in raw.split(",") if origin.strip()]
+    return parsed or DEFAULT_CORS_ORIGINS
+
+
 app = FastAPI()
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(CORSMiddleware, allow_origins=_cors_origins(), allow_methods=["*"], allow_headers=["*"])
 
 
 class OptimizeReq(BaseModel):

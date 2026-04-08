@@ -9,7 +9,7 @@ const MESSAGES = [
   "Finalizing reaction cascade...",
 ];
 
-const MIN_VISIBLE_MS = 2500;
+const MIN_VISIBLE_MS = 5000;
 
 export default function SimulationOverlay({ active }) {
   const [progress, setProgress] = useState(0);
