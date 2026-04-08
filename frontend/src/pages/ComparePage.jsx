@@ -57,7 +57,7 @@ export default function ComparePage() {
 
   useEffect(() => {
     fetchPresets().then(setData).catch((e) => pushToast(e.message || "Failed to load presets")).finally(() => setLoading(false));
-  }, []);
+  }, [pushToast]);
 
   const summary = useMemo(() => {
     if (!data) return null;

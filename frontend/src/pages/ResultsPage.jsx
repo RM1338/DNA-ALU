@@ -54,6 +54,41 @@ export default function ResultsPage() {
   const { simulationResult, projectName, gates, wires, setSimulationResult } = useCircuitStore();
   const [optimizing, setOptimizing] = useState(false);
   const [optimizationDelta, setOptimizationDelta] = useState(null);
+  const nodeById = useMemo(() => Object.fromEntries(gates.map((g) => [g.id, g])), [gates]);
+  const inputLabels = useMemo(
+    () => gates.filter((g) => g.type === "inputNode").map((g) => g.data?.label).filter(Boolean),
+    [gates],
+  );
+  const outputLabels = useMemo(
+    () => gates.filter((g) => g.type === "outputNode").map((g) => g.data?.label).filter(Boolean),
+    [gates],
+  );
+
+  const strands = useMemo(
+    () => buildStrandsFromCostRows(simulationResult?.strandCostTable || []),
+    [simulationResult],
+  );
+
+  const circuit = useMemo(
+    () => ({
+      projectName,
+      gates: gates
+        .filter((g) => g.type === "bioGate")
+        .map((g) => ({ id: g.id, gateType: g.data?.gateType, position: g.position, params: g.data?.params || {} })),
+      wires: wires.map((w) => {
+        const sourceNode = nodeById[w.source];
+        const targetNode = nodeById[w.target];
+        return {
+          ...w,
+          source: sourceNode?.type === "inputNode" ? `in_${sourceNode.data?.label}` : w.source,
+          target: targetNode?.type === "outputNode" ? `out_${targetNode.data?.label}` : w.target,
+        };
+      }),
+      inputs: inputLabels,
+      outputs: outputLabels,
+    }),
+    [projectName, gates, wires, inputLabels, outputLabels, nodeById],
+  );
 
   if (!simulationResult) {
     return (
@@ -66,19 +101,6 @@ export default function ResultsPage() {
       </div>
     );
   }
-
-  const inputLabels = gates.filter((g) => g.type === "inputNode").map((g) => g.data?.label);
-  const outputLabels = gates.filter((g) => g.type === "outputNode").map((g) => g.data?.label);
-
-  const strands = useMemo(() => buildStrandsFromCostRows(simulationResult.strandCostTable), [simulationResult]);
-
-  const circuit = useMemo(() => ({
-    projectName,
-    gates: gates.filter((g) => g.type === "bioGate").map((g) => ({ id: g.id, gateType: g.data?.gateType, position: g.position, params: g.data?.params || {} })),
-    wires: wires.map((w) => ({ ...w })),
-    inputs: inputLabels,
-    outputs: outputLabels,
-  }), [projectName, gates, wires, inputLabels, outputLabels]);
 
   async function runOptimize(objective) {
     setOptimizing(true);

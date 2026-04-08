@@ -48,6 +48,8 @@ class KReq(BaseModel):
 def sim(payload: CircuitPayload):
     try:
         return simulate(payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=f"Simulation input invalid: {exc}")
     except Exception as exc:
         logger.exception("Simulation failed")
         raise HTTPException(status_code=500, detail=f"Simulation failed: {exc}")
@@ -57,6 +59,8 @@ def sim(payload: CircuitPayload):
 def opt(req: OptimizeReq):
     try:
         return optimize(req.circuit, req.objective)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=f"Optimization input invalid: {exc}")
     except Exception as exc:
         logger.exception("Optimization failed")
         raise HTTPException(status_code=500, detail=f"Optimization failed: {exc}")

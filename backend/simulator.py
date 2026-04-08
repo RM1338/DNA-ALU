@@ -6,6 +6,8 @@ from itertools import product
 def build_graph(payload):
     G=nx.DiGraph()
     for g in payload.gates:
+        if g.gateType not in GATE_LIBRARY:
+            raise ValueError(f"Unsupported gate type '{g.gateType}' for gate '{g.id}'")
         lib=GATE_LIBRARY[g.gateType]
         G.add_node(g.id, gateType=g.gateType, strandCost=lib['strandCost'], reactionTime=lib['reactionTimeMin'], enzyme=lib['enzyme'])
     for w in payload.wires:
@@ -33,8 +35,9 @@ def simulate(payload):
     truth=[]
     topo=list(nx.topological_sort(G)) if len(G) else []
     for combo in product([0,1], repeat=len(payload.inputs)):
-        vals={f'in_{k}':v for k,v in zip(payload.inputs,combo)}
-        vals.update({k:v for k,v in zip(payload.inputs,combo)})
+        input_assignment={k:v for k,v in zip(payload.inputs,combo)}
+        vals={f'in_{k}':v for k,v in input_assignment.items()}
+        vals.update(input_assignment)
         for gid in topo:
             ins=[vals.get(src,0) for src in incoming.get(gid,[])]
             vals[gid]=_eval(G.nodes[gid]['gateType'],ins)
