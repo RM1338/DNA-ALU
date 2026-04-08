@@ -1,5 +1,25 @@
 const BASE = "http://localhost:8000/api";
 
+async function getErrorMessage(response) {
+  try {
+    const data = await response.clone().json();
+    if (typeof data?.detail === "string" && data.detail.trim()) return data.detail;
+    if (typeof data?.message === "string" && data.message.trim()) return data.message;
+    if (typeof data?.error === "string" && data.error.trim()) return data.error;
+  } catch {
+    // fall through
+  }
+
+  try {
+    const txt = await response.text();
+    if (txt?.trim()) return txt;
+  } catch {
+    // fall through
+  }
+
+  return `Request failed with status ${response.status}`;
+}
+
 async function call(path, body) {
   const r = await fetch(`${BASE}${path}`, {
     method: "POST",
@@ -7,11 +27,7 @@ async function call(path, body) {
     body: JSON.stringify(body),
   });
 
-  if (!r.ok) {
-    const txt = await r.text();
-    throw new Error(txt || `Request failed: ${r.status}`);
-  }
-
+  if (!r.ok) throw new Error(await getErrorMessage(r));
   return r.json();
 }
 
@@ -20,7 +36,7 @@ export const optimizeCircuit = (circuit, objective) => call("/optimize", { circu
 
 export const fetchPresets = async () => {
   const r = await fetch(`${BASE}/presets`);
-  if (!r.ok) throw new Error((await r.text()) || "Failed to fetch presets");
+  if (!r.ok) throw new Error(await getErrorMessage(r));
   return r.json();
 };
 
@@ -31,7 +47,7 @@ async function download(path, body, filename) {
     body: JSON.stringify(body),
   });
 
-  if (!r.ok) throw new Error((await r.text()) || "Download failed");
+  if (!r.ok) throw new Error(await getErrorMessage(r));
 
   const blob = await r.blob();
   const url = URL.createObjectURL(blob);

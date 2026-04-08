@@ -8,6 +8,7 @@ import { useUiStore } from "../store/uiStore";
 import DNAStructureReport from "../components/DNAStructureReport";
 import DNAHelixVisualizer from "../components/DNAHelixVisualizer";
 import { buildStrandsFromCostRows } from "../utils/strandModel";
+import CoCompliancePanel from "../components/CoCompliancePanel";
 
 function ExplainResult({ result }) {
   const fastestStage = [...(result.stages || [])].sort((a, b) => b.durationMinutes - a.durationMinutes)[0];
@@ -29,11 +30,30 @@ function ExplainResult({ result }) {
   );
 }
 
+function OptimizationDeltaPanel({ delta }) {
+  if (!delta) return null;
+
+  const strandClass = delta.strandDelta > 0 ? "up" : "down";
+  const timeClass = delta.timeDelta > 0 ? "up" : "down";
+  const strandPrefix = delta.strandDelta > 0 ? "+" : "";
+  const timePrefix = delta.timeDelta > 0 ? "+" : "";
+
+  return (
+    <div className="panel">
+      <h3>Optimization Change Summary</h3>
+      <p className="mono">Objective: {delta.objective}</p>
+      <p className="mono">Strands: {delta.beforeStrands} {"→"} {delta.afterStrands} <span className={strandClass}>({strandPrefix}{delta.strandDelta})</span></p>
+      <p className="mono">Time: {delta.beforeTime} min {"→"} {delta.afterTime} min <span className={timeClass}>({timePrefix}{delta.timeDelta} min)</span></p>
+    </div>
+  );
+}
+
 export default function ResultsPage() {
   const nav = useNavigate();
   const pushToast = useUiStore((s) => s.pushToast);
   const { simulationResult, projectName, gates, wires, setSimulationResult } = useCircuitStore();
   const [optimizing, setOptimizing] = useState(false);
+  const [optimizationDelta, setOptimizationDelta] = useState(null);
 
   if (!simulationResult) {
     return (
@@ -58,16 +78,29 @@ export default function ResultsPage() {
     wires: wires.map((w) => ({ ...w })),
     inputs: inputLabels,
     outputs: outputLabels,
-  }), [projectName, gates, wires]);
+  }), [projectName, gates, wires, inputLabels, outputLabels]);
 
   async function runOptimize(objective) {
     setOptimizing(true);
     try {
+      const beforeStrands = simulationResult.totalStrandTypes;
+      const beforeTime = simulationResult.criticalPathMinutes;
       const data = await optimizeCircuit(circuit, objective);
       setSimulationResult(data.result);
+      const afterStrands = data.result.totalStrandTypes;
+      const afterTime = data.result.criticalPathMinutes;
+      setOptimizationDelta({
+        objective,
+        beforeStrands,
+        afterStrands,
+        strandDelta: afterStrands - beforeStrands,
+        beforeTime,
+        afterTime,
+        timeDelta: Number((afterTime - beforeTime).toFixed(2)),
+      });
       pushToast(`Optimized for ${objective === "minStrand" ? "strand cost" : "reaction time"}`, "ok");
     } catch (e) {
-      pushToast(e.message || "Optimization failed");
+      pushToast(e);
     } finally {
       setOptimizing(false);
     }
@@ -75,10 +108,10 @@ export default function ResultsPage() {
 
   async function onExportPdf() {
     try {
-      await exportPDF(circuit, simulationResult, projectName);
+      await exportPDF(circuit, simulationResult, projectName || "bio-alu-report");
       pushToast("PDF downloaded", "ok");
     } catch (e) {
-      pushToast(e.message || "Export failed");
+      pushToast(e);
     }
   }
 
@@ -94,6 +127,7 @@ export default function ResultsPage() {
       </div>
 
       <ExplainResult result={simulationResult} />
+      <OptimizationDeltaPanel delta={optimizationDelta} />
 
       <div className="results-main results-main-xl">
         <section className="panel"><h3>Reaction Cascade Timeline</h3><ReactionGantt stages={simulationResult.stages} /></section>
@@ -111,6 +145,8 @@ export default function ResultsPage() {
       <DNAHelixVisualizer title="DNA Product Structure" rows={simulationResult.strandCostTable} strands={strands} />
 
       <DNAStructureReport rows={simulationResult.strandCostTable} strands={strands} />
+
+      <CoCompliancePanel result={simulationResult} />
 
       <button className="ghost" onClick={() => nav("/compare")}>Compare circuit topologies →</button>
     </div>

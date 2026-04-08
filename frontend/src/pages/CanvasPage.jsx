@@ -22,7 +22,6 @@ import { evaluateTruthTable } from "../utils/circuitEvaluator";
 import { simulateCircuit } from "../api/bioApi";
 import { RIPPLE_CARRY_ADDER, CARRY_LOOKAHEAD_ADDER } from "../data/presetCircuits";
 import { useUiStore } from "../store/uiStore";
-import BioExplainer from "../components/BioExplainer";
 import SimulationOverlay from "../components/SimulationOverlay";
 
 const INPUT_LABELS = ["A", "B", "Cin", "D", "E"];
@@ -197,7 +196,6 @@ export default function CanvasPage() {
           </button>
 
           <LiveTruthTable rows={truthRows} />
-          <BioExplainer />
         </aside>
       </div>
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const MESSAGES = [
   "Validating circuit topology...",
@@ -9,20 +9,40 @@ const MESSAGES = [
   "Finalizing reaction cascade...",
 ];
 
+const MIN_VISIBLE_MS = 2500;
+
 export default function SimulationOverlay({ active }) {
   const [progress, setProgress] = useState(0);
   const [step, setStep] = useState(0);
+  const [visible, setVisible] = useState(false);
+  const startedAtRef = useRef(0);
 
   useEffect(() => {
-    if (!active) {
-      setProgress(0);
-      setStep(0);
+    if (active) {
+      startedAtRef.current = Date.now();
+      setVisible(true);
       return;
     }
 
+    const elapsed = Date.now() - startedAtRef.current;
+    const remaining = Math.max(0, MIN_VISIBLE_MS - elapsed);
+
+    const hideTimer = setTimeout(() => {
+      setVisible(false);
+      setProgress(0);
+      setStep(0);
+    }, remaining);
+
+    return () => clearTimeout(hideTimer);
+  }, [active]);
+
+  useEffect(() => {
+    if (!visible) return undefined;
+
     const id = setInterval(() => {
       setProgress((p) => {
-        const next = Math.min(96, p + Math.random() * 8);
+        const target = active ? 96 : 100;
+        const next = Math.min(target, p + Math.random() * 8);
         const idx = Math.min(MESSAGES.length - 1, Math.floor((next / 100) * MESSAGES.length));
         setStep(idx);
         return next;
@@ -30,9 +50,9 @@ export default function SimulationOverlay({ active }) {
     }, 300);
 
     return () => clearInterval(id);
-  }, [active]);
+  }, [visible, active]);
 
-  if (!active) return null;
+  if (!visible) return null;
 
   return (
     <div className="sim-overlay">

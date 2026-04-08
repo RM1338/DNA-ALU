@@ -13,11 +13,35 @@ const load = () => {
 };
 
 const save = (state) => {
-  localStorage.setItem(
-    KEY,
-    JSON.stringify({ gates: state.gates, wires: state.wires, projectName: state.projectName }),
-  );
+  localStorage.setItem(KEY, JSON.stringify({ gates: state.gates, wires: state.wires, projectName: state.projectName }));
 };
+
+function validatePreset(circuit) {
+  if (!circuit || typeof circuit !== "object") throw new Error("Preset payload is invalid.");
+  const required = ["gates", "wires", "inputs", "outputs"];
+  for (const key of required) {
+    if (!Array.isArray(circuit[key])) throw new Error(`Preset missing array: ${key}`);
+  }
+
+  for (const g of circuit.gates) {
+    if (!g?.id || !g?.gateType || !g?.position) throw new Error("Preset gate has invalid structure.");
+    if (typeof g.position.x !== "number" || typeof g.position.y !== "number") throw new Error(`Gate ${g.id} position invalid.`);
+    if (!bioGateMap[g.gateType]) throw new Error(`Gate ${g.id} has unknown type ${g.gateType}.`);
+  }
+
+  const validNodeIds = new Set([
+    ...circuit.gates.map((g) => g.id),
+    ...circuit.inputs.map((i) => `in_${i}`),
+    ...circuit.outputs.map((o) => `out_${o}`),
+  ]);
+
+  for (const w of circuit.wires) {
+    if (!w?.id || !w?.source || !w?.target) throw new Error("Preset wire has invalid structure.");
+    if (!validNodeIds.has(w.source) || !validNodeIds.has(w.target)) throw new Error(`Wire ${w.id} references missing node.`);
+  }
+
+  return true;
+}
 
 export const useCircuitStore = create((set, get) => ({
   gates: load().gates || [],
@@ -68,9 +92,7 @@ export const useCircuitStore = create((set, get) => ({
       const ns = {
         ...s,
         gates: s.gates.map((g) =>
-          g.id === id
-            ? { ...g, data: { ...g.data, params: { ...(g.data?.params || DEFAULT_PARAMS), ...params } } }
-            : g,
+          g.id === id ? { ...g, data: { ...g.data, params: { ...(g.data?.params || DEFAULT_PARAMS), ...params } } } : g,
         ),
       };
       save(ns);
@@ -104,35 +126,41 @@ export const useCircuitStore = create((set, get) => ({
 
   loadPreset: (circuit) =>
     set((s) => {
-      const gateNodes = circuit.gates.map((g) => ({
-        id: g.id,
-        type: "bioGate",
-        position: g.position,
-        data: { gateType: g.gateType, params: g.params || { ...DEFAULT_PARAMS } },
-      }));
+      try {
+        validatePreset(circuit);
 
-      const inputNodes = (circuit.inputs || []).map((label, i) => ({
-        id: `in_${label}`,
-        type: "inputNode",
-        position: { x: 80, y: 120 + i * 80 },
-        data: { ioType: "input", label },
-      }));
+        const gateNodes = circuit.gates.map((g) => ({
+          id: g.id,
+          type: "bioGate",
+          position: g.position,
+          data: { gateType: g.gateType, params: g.params || { ...DEFAULT_PARAMS } },
+        }));
 
-      const outputNodes = (circuit.outputs || []).map((label, i) => ({
-        id: `out_${label}`,
-        type: "outputNode",
-        position: { x: 980, y: 180 + i * 100 },
-        data: { ioType: "output", label },
-      }));
+        const inputNodes = (circuit.inputs || []).map((label, i) => ({
+          id: `in_${label}`,
+          type: "inputNode",
+          position: { x: 80, y: 120 + i * 80 },
+          data: { ioType: "input", label },
+        }));
 
-      const wires = (circuit.wires || []).map((w) => ({ ...w, type: "smoothstep", style: { stroke: "#00FF88", strokeWidth: 1.5, opacity: 0.6 } }));
-      const ns = { ...s, gates: [...inputNodes, ...gateNodes, ...outputNodes], wires, projectName: circuit.projectName || s.projectName };
-      save(ns);
-      return ns;
+        const outputNodes = (circuit.outputs || []).map((label, i) => ({
+          id: `out_${label}`,
+          type: "outputNode",
+          position: { x: 980, y: 180 + i * 100 },
+          data: { ioType: "output", label },
+        }));
+
+        const wires = (circuit.wires || []).map((w) => ({ ...w, type: "smoothstep", style: { stroke: "#00FF88", strokeWidth: 1.5, opacity: 0.6 } }));
+        const ns = { ...s, gates: [...inputNodes, ...gateNodes, ...outputNodes], wires, projectName: circuit.projectName || s.projectName };
+        save(ns);
+        return ns;
+      } catch (err) {
+        console.error("Invalid preset rejected:", err);
+        return s;
+      }
     }),
 
-  getTotalStrandCost: () =>
-    get().gates.reduce((sum, g) => sum + (bioGateMap[g.data?.gateType]?.strandCost || 0), 0),
+  getTotalStrandCost: () => get().gates.reduce((sum, g) => sum + (bioGateMap[g.data?.gateType]?.strandCost || 0), 0),
 
   getGateCount: () => get().gates.filter((g) => g.type === "bioGate").length,
 }));

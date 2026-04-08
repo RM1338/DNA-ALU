@@ -32,6 +32,7 @@ export default function TopBar() {
         <NavLink to="/canvas" className={({ isActive }) => `tab ${isActive ? "active" : ""}`}>Canvas</NavLink>
         <NavLink to="/results" className={({ isActive }) => `tab ${isActive ? "active" : ""}`}>Simulation</NavLink>
         <NavLink to="/compare" className={({ isActive }) => `tab ${isActive ? "active" : ""}`}>Comparison</NavLink>
+        <NavLink to="/guide" className={({ isActive }) => `tab ${isActive ? "active" : ""}`}>Guide</NavLink>
       </nav>
       <input className="project-input" value={projectName} onChange={(e) => setProjectName(e.target.value)} />
       <div className="top-actions">
