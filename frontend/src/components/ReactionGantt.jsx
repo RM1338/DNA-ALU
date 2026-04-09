@@ -10,10 +10,19 @@ export default function ReactionGantt({ stages = [] }) {
   }));
 
   return (
-    <div style={{ height: 320 }}>
-      <ResponsiveContainer>
-        <BarChart data={data} layout="vertical" margin={{ left: 24, right: 16, top: 8, bottom: 8 }}>
-          <XAxis type="number" tick={{ fill: "#A0A0A0" }} />
+    <div style={{ height: 320, width: "100%", overflow: "visible" }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart
+          data={data}
+          layout="vertical"
+          margin={{ left: 24, right: 56, top: 8, bottom: 8 }}
+        >
+          <XAxis
+            type="number"
+            tick={{ fill: "#A0A0A0" }}
+            padding={{ right: 8 }}
+            domain={[0, "auto"]}
+          />
           <YAxis type="category" dataKey="name" tick={{ fill: "#A0A0A0" }} width={70} />
           <Tooltip
             contentStyle={{ background: "#1E1E1E", border: "1px solid rgba(255,255,255,0.1)", color: "#fff" }}
