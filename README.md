@@ -2,21 +2,19 @@
 
 Full-stack biological circuit simulator.
 
-## Course Outcome Mapping
+## Course Outcome Mapping (implemented in code)
 
 ### CO1: Use relevant instruction cycle to efficiently manage processor functionality
-- Implemented in simulation pipeline: **Fetch Circuit -> Decode Gate Map -> Execute Stage DAG -> Writeback Metrics**.
-- Visible in UI under `Results -> Course Outcome Compliance` panel.
-- Backend execution graph uses topological stage scheduling (`backend/simulator.py`).
+- **Implementation:** `backend/course_outcomes.py` builds a **fetch → decode → execute → writeback** report from the real graph, library decode, staged DAG, and aggregated metrics. Returned on every `/api/simulate` response as `courseOutcomes.co1`.
+- **UI:** Results page **Course outcome compliance** section; simulation overlay messages reference the same pipeline.
 
 ### CO4: Use interfacing techniques for programmable peripheral devices
-- Implemented with explicit **Input/Output node interfacing** on canvas.
-- Added IO mode demonstrator (PIO / Interrupt / DMA) in `Course Outcome Compliance` panel.
-- Truth table transfer and IO throughput index are shown for assessment.
+- **Implementation:** Canvas **PIO / Interrupt / DMA** control (stored in `frontend/src/store/circuitStore.js`, sent as `ioInterfaceMode` on simulate). Backend **CO4** metrics (throughput index, latency factor, adjusted schedule) are computed from truth-table size and port counts in `course_outcomes.py`.
 
 ### CO5: Evaluate GPU architectures for high-performance computing
-- Added GPU architecture evaluator (SIMT / Tensor / Hybrid) in `Course Outcome Compliance` panel.
-- Shows estimated speedup and effective simulation time for each architecture profile.
+- **Implementation:** `course_outcomes.py` compares **serial work** (sum of per-gate reaction times) to **critical-path** time and emits **SIMT / Tensor / Hybrid** profiles with speedups and effective schedule minutes in `courseOutcomes.co5`.
+
+PDF exports include a short CO summary when `courseOutcomes` is present (`backend/export_pdf.py`).
 
 ## Run
 

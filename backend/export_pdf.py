@@ -53,5 +53,31 @@ def generate_pdf(circuit, result, circuitName):
             styles["BodyText"],
         ))
 
+    co = getattr(result, "courseOutcomes", None)
+    if co is not None:
+        elements.append(Spacer(1, 16))
+        elements.append(Paragraph("Course outcomes (assessment mapping)", styles["Heading2"]))
+        elements.append(Paragraph(
+            "<b>CO1</b> — Instruction-style pipeline: fetch/decode/execute/writeback metrics are derived from this run.",
+            styles["BodyText"],
+        ))
+        for ph in co.co1.phases:
+            elements.append(Paragraph(
+                f"&nbsp;&nbsp;• <b>{ph.title}</b>: {ph.description}",
+                styles["BodyText"],
+            ))
+        elements.append(Paragraph(
+            f"<b>CO4</b> — Peripheral interface mode: <b>{co.co4.mode}</b>; throughput index {co.co4.throughputIndex}; "
+            f"adjusted schedule (IO model) {co.co4.adjustedScheduleMinutes} min.",
+            styles["BodyText"],
+        ))
+        lines = []
+        for p in co.co5.profiles:
+            lines.append(f"{p.label}: ~{p.speedup}× → {p.effectiveScheduleMinutes} min effective")
+        elements.append(Paragraph(
+            "<b>CO5</b> — GPU-style evaluation: " + " | ".join(lines),
+            styles["BodyText"],
+        ))
+
     doc.build(elements)
     return buffer.getvalue()

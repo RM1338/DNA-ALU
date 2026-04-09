@@ -117,6 +117,7 @@ export default function CanvasPage() {
       wires: transformed.wires,
       inputs: transformed.inputLabels,
       outputs: transformed.outputLabels,
+      ioInterfaceMode: store.ioInterfaceMode,
     };
 
     const startedAt = Date.now();
@@ -193,6 +194,34 @@ export default function CanvasPage() {
           <MetricKPI label="Gate Count" value={store.getGateCount()} />
           <MetricKPI label="Input Nodes" value={inputCount} />
           <MetricKPI label="Output Nodes" value={outputCount} />
+
+          <div className="co-io-panel">
+            <div className="mono pane-title co-io-title">CO4 · Peripheral interface</div>
+            <p className="co-io-hint">How truth-table IO is modeled for this run (PIO / IRQ / DMA).</p>
+            <div className="co-toggle-row">
+              <button
+                type="button"
+                className={`ghost ${store.ioInterfaceMode === "PIO" ? "selected" : ""}`}
+                onClick={() => store.setIoInterfaceMode("PIO")}
+              >
+                PIO
+              </button>
+              <button
+                type="button"
+                className={`ghost ${store.ioInterfaceMode === "INTERRUPT" ? "selected" : ""}`}
+                onClick={() => store.setIoInterfaceMode("INTERRUPT")}
+              >
+                Interrupt
+              </button>
+              <button
+                type="button"
+                className={`ghost ${store.ioInterfaceMode === "DMA" ? "selected" : ""}`}
+                onClick={() => store.setIoInterfaceMode("DMA")}
+              >
+                DMA
+              </button>
+            </div>
+          </div>
 
           {inputCount === 0 && store.getGateCount() > 0 && <div className="warn">No input nodes</div>}
           {outputCount === 0 && store.getGateCount() > 0 && <div className="warn">No output nodes</div>}

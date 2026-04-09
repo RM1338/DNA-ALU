@@ -7,7 +7,7 @@ import { useUiStore } from "../store/uiStore";
 export default function TopBar() {
   const nav = useNavigate();
   const pushToast = useUiStore((s) => s.pushToast);
-  const { projectName, setProjectName, gates, wires, simulationResult } = useCircuitStore();
+  const { projectName, setProjectName, gates, wires, simulationResult, ioInterfaceMode } = useCircuitStore();
   const nodeById = useMemo(() => Object.fromEntries(gates.map((g) => [g.id, g])), [gates]);
 
   const circuit = {
@@ -24,6 +24,7 @@ export default function TopBar() {
     }),
     inputs: gates.filter((g) => g.type === "inputNode").map((g) => g.data?.label),
     outputs: gates.filter((g) => g.type === "outputNode").map((g) => g.data?.label),
+    ioInterfaceMode: simulationResult?.courseOutcomes?.co4?.mode || ioInterfaceMode,
   };
 
   async function onExportPdf() {
@@ -46,7 +47,15 @@ export default function TopBar() {
       </nav>
       <input className="project-input" value={projectName} onChange={(e) => setProjectName(e.target.value)} />
       <div className="top-actions">
-        <button className="ghost" onClick={() => { localStorage.setItem("bioalu_circuit", JSON.stringify({ gates, wires, projectName })); pushToast("Saved locally", "ok"); }}>Save</button>
+        <button
+          className="ghost"
+          onClick={() => {
+            localStorage.setItem("bioalu_circuit", JSON.stringify({ gates, wires, projectName, ioInterfaceMode }));
+            pushToast("Saved locally", "ok");
+          }}
+        >
+          Save
+        </button>
         <button className="ghost" onClick={onExportPdf}>Export PDF</button>
         <button className="ghost" onClick={onExportSbol}>Export SBOL</button>
       </div>

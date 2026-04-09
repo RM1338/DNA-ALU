@@ -2,6 +2,7 @@ import networkx as nx
 from gate_library import GATE_LIBRARY
 from models import SimulationResult, ReactionStage, GateCostRow
 from itertools import product
+from course_outcomes import build_course_outcomes_bundle
 
 def build_graph(payload):
     G=nx.DiGraph()
@@ -49,4 +50,22 @@ def simulate(payload):
             vals[gid]=_eval(G.nodes[gid]['gateType'],ins)
         outs={k:vals.get(k,vals.get(f'out_{k}',0)) for k in payload.outputs}
         truth.append({'inputs':{k:vals[k] for k in payload.inputs},'outputs':outs})
-    return SimulationResult(totalStrandTypes=sum(r.strandCost for r in cost),criticalPathMinutes=t,stageCount=len(stages),stages=stages,strandCostTable=cost,truthTable=truth)
+    total_strand_sum = sum(r.strandCost for r in cost)
+    course_outcomes = build_course_outcomes_bundle(
+        payload,
+        G,
+        generations,
+        len(stages),
+        t,
+        total_strand_sum,
+        len(truth),
+    )
+    return SimulationResult(
+        totalStrandTypes=total_strand_sum,
+        criticalPathMinutes=t,
+        stageCount=len(stages),
+        stages=stages,
+        strandCostTable=cost,
+        truthTable=truth,
+        courseOutcomes=course_outcomes,
+    )

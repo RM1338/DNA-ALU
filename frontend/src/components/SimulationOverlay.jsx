@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 
 const MESSAGES = [
-  "Validating circuit topology...",
-  "Resolving biological gate mappings...",
-  "Computing reaction stages...",
-  "Estimating strand synthesis cost...",
-  "Evaluating truth table outputs...",
-  "Finalizing reaction cascade...",
+  "CO1 · Fetch — loading circuit graph, wires, and IO port labels...",
+  "CO1 · Decode — mapping each gate to library mechanisms and timings...",
+  "CO1 · Execute — scheduling reaction stages (DAG wavefronts)...",
+  "CO4 · Peripheral model — applying your PIO / Interrupt / DMA interface choice...",
+  "CO5 · GPU-style eval — estimating parallelism vs serial gate work...",
+  "CO1 · Writeback — aggregating strand cost, timeline, and truth table...",
 ];
 
 const MIN_VISIBLE_MS = 5000;
@@ -61,9 +61,9 @@ export default function SimulationOverlay({ active }) {
         <p className="mono">{MESSAGES[step]}</p>
         <div className="sim-progress"><div style={{ width: `${progress}%` }} /></div>
         <div className="sim-chip-row">
-          <span className="sim-chip">DNA mapping</span>
-          <span className="sim-chip">Stage solving</span>
-          <span className="sim-chip">Truth propagation</span>
+          <span className="sim-chip">CO1 pipeline</span>
+          <span className="sim-chip">CO4 IO mode</span>
+          <span className="sim-chip">CO5 GPU eval</span>
         </div>
       </div>
     </div>

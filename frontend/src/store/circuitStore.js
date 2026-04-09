@@ -13,7 +13,15 @@ const load = () => {
 };
 
 const save = (state) => {
-  localStorage.setItem(KEY, JSON.stringify({ gates: state.gates, wires: state.wires, projectName: state.projectName }));
+  localStorage.setItem(
+    KEY,
+    JSON.stringify({
+      gates: state.gates,
+      wires: state.wires,
+      projectName: state.projectName,
+      ioInterfaceMode: state.ioInterfaceMode || "PIO",
+    }),
+  );
 };
 
 function validatePreset(circuit) {
@@ -50,6 +58,17 @@ export const useCircuitStore = create((set, get) => ({
   simulationResult: null,
   isSimulating: false,
   projectName: load().projectName || "Untitled Circuit",
+  /** CO4: PIO | INTERRUPT | DMA — sent with /api/simulate and reflected in course outcomes. */
+  ioInterfaceMode: load().ioInterfaceMode || "PIO",
+
+  setIoInterfaceMode: (mode) =>
+    set((s) => {
+      const allowed = ["PIO", "INTERRUPT", "DMA"];
+      const next = allowed.includes(mode) ? mode : "PIO";
+      const ns = { ...s, ioInterfaceMode: next };
+      save(ns);
+      return ns;
+    }),
 
   addGate: (gateType, position) =>
     set((s) => {

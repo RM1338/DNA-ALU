@@ -51,7 +51,7 @@ function OptimizationDeltaPanel({ delta }) {
 export default function ResultsPage() {
   const nav = useNavigate();
   const pushToast = useUiStore((s) => s.pushToast);
-  const { simulationResult, projectName, gates, wires, setSimulationResult } = useCircuitStore();
+  const { simulationResult, projectName, gates, wires, setSimulationResult, ioInterfaceMode } = useCircuitStore();
   const [optimizing, setOptimizing] = useState(false);
   const [optimizationDelta, setOptimizationDelta] = useState(null);
   const nodeById = useMemo(() => Object.fromEntries(gates.map((g) => [g.id, g])), [gates]);
@@ -68,6 +68,8 @@ export default function ResultsPage() {
     () => buildStrandsFromCostRows(simulationResult?.strandCostTable || []),
     [simulationResult],
   );
+
+  const appliedIoMode = simulationResult?.courseOutcomes?.co4?.mode || ioInterfaceMode;
 
   const circuit = useMemo(
     () => ({
@@ -86,8 +88,9 @@ export default function ResultsPage() {
       }),
       inputs: inputLabels,
       outputs: outputLabels,
+      ioInterfaceMode: appliedIoMode,
     }),
-    [projectName, gates, wires, inputLabels, outputLabels, nodeById],
+    [projectName, gates, wires, inputLabels, outputLabels, nodeById, appliedIoMode],
   );
 
   if (!simulationResult) {
